@@ -1,6 +1,7 @@
 import typer
 
 from atlas.llm import chat
+from atlas.memory import save, search
 
 app = typer.Typer()
 
@@ -8,6 +9,19 @@ SYSTEM_PROMPT = (
     "Tu es Atlas, assistant IA interne d'ATLAS Consulting. "
     "Tu réponds en français de façon concise et précise."
 )
+
+
+def build_system_prompt(query: str) -> str:
+    memories = search(query)
+    if not memories:
+        return SYSTEM_PROMPT
+
+    memories_text = "\n".join(f"- {m}" for m in memories)
+    return (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"Éléments de contexte issus des conversations précédentes :\n"
+        f"{memories_text}"
+    )
 
 
 @app.command()
@@ -19,7 +33,7 @@ def main(
     print(f"Atlas AI - modèle : {model}")
     print("Tapez 'exit' pour quitter.\n")
 
-    history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    history = []
 
     while True:
         try:
@@ -35,18 +49,23 @@ def main(
         if not user_input:
             continue
 
-        history.append({"role": "user", "content": user_input})
+        system_prompt = build_system_prompt(user_input)
+        messages = [{"role": "system", "content": system_prompt}] + history
+        messages.append({"role": "user", "content": user_input})
 
         print("Atlas : ", end="", flush=True)
 
         if stream:
             response_text = ""
-            for token in chat(model, history, timeout=timeout, stream=True):
+            for token in chat(model, messages, timeout=timeout, stream=True):
                 print(token, end="", flush=True)
                 response_text += token
             print("\n")
         else:
-            response_text = chat(model, history, timeout=timeout, stream=False)
+            response_text = chat(model, messages, timeout=timeout, stream=False)
             print(f"{response_text}\n")
 
+        history.append({"role": "user", "content": user_input})
         history.append({"role": "assistant", "content": response_text})
+
+        save(user_input, response_text)
