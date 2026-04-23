@@ -11,17 +11,18 @@ SYSTEM_PROMPT = (
 )
 
 
-def build_system_prompt(query: str) -> str:
+def build_system_prompt(query: str) -> tuple[str, int]:
     memories = search(query)
     if not memories:
-        return SYSTEM_PROMPT
+        return SYSTEM_PROMPT, 0
 
     memories_text = "\n".join(f"- {m}" for m in memories)
-    return (
+    prompt = (
         f"{SYSTEM_PROMPT}\n\n"
         f"Éléments de contexte issus des conversations précédentes :\n"
         f"{memories_text}"
     )
+    return prompt, len(memories)
 
 
 @app.command()
@@ -49,7 +50,7 @@ def main(
         if not user_input:
             continue
 
-        system_prompt = build_system_prompt(user_input)
+        system_prompt, memory_hits = build_system_prompt(user_input)
         messages = [{"role": "system", "content": system_prompt}] + history
         messages.append({"role": "user", "content": user_input})
 
@@ -57,12 +58,16 @@ def main(
 
         if stream:
             response_text = ""
-            for token in chat(model, messages, timeout=timeout, stream=True):
+            for token in chat(
+                model, messages, timeout=timeout, stream=True, memory_hits=memory_hits
+            ):
                 print(token, end="", flush=True)
                 response_text += token
             print("\n")
         else:
-            response_text = chat(model, messages, timeout=timeout, stream=False)
+            response_text = chat(
+                model, messages, timeout=timeout, stream=False, memory_hits=memory_hits
+            )
             print(f"{response_text}\n")
 
         history.append({"role": "user", "content": user_input})

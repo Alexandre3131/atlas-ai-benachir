@@ -2,14 +2,18 @@ from typing import Generator
 
 import httpx
 
+from atlas.monitoring import traced
+
 OLLAMA_BASE_URL = "http://localhost:11434"
 
 
+@traced
 def chat(
     model: str,
     messages: list[dict],
     timeout: float = 60.0,
     stream: bool = False,
+    **kwargs,
 ) -> str | Generator[str, None, None]:
     url = f"{OLLAMA_BASE_URL}/api/chat"
     payload = {
