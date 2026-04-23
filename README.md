@@ -4,6 +4,7 @@ Assistant IA 100% local pour ATLAS Consulting. Aucune donnée envoyée dans le c
 
 ## Lancer le projet
 
+Sur Linux :
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -13,6 +14,6 @@ atlas-chat
 ```
 
 ## Stack
-- LLM : Ollama (llama3.2:3b ou qwen3:4b)
-- Mémoire : ChromaDB (vectorielle + persistante)
+- LLM : Ollama (qwen3:4b)
+- Mémoire : ChromaDB
 - Monitoring : JSONL + pandas
