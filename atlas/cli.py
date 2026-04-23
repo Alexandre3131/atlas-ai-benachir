@@ -1,14 +1,13 @@
 import typer
 
+from atlas.config import config
+from atlas.guardrails import check_input
 from atlas.llm import chat
 from atlas.memory import save, search
 
 app = typer.Typer()
 
-SYSTEM_PROMPT = (
-    "Tu es Atlas, assistant IA interne d'ATLAS Consulting. "
-    "Tu réponds en français de façon concise et précise."
-)
+SYSTEM_PROMPT = config.persona.system_prompt
 
 
 def build_system_prompt(query: str) -> tuple[str, int]:
@@ -27,8 +26,8 @@ def build_system_prompt(query: str) -> tuple[str, int]:
 
 @app.command()
 def main(
-    model: str = typer.Option("qwen3:8b", help="Modèle Ollama à utiliser"),
-    timeout: float = typer.Option(60.0, help="Timeout en secondes"),
+    model: str = typer.Option(config.model.name, help="Modèle Ollama à utiliser"),
+    timeout: float = typer.Option(500, help="Timeout en secondes"),
     stream: bool = typer.Option(True, help="Activer le streaming"),
 ):
     print(f"Atlas AI - modèle : {model}")
@@ -50,6 +49,13 @@ def main(
         if not user_input:
             continue
 
+        guard = check_input(user_input)
+        if not guard.allowed:
+            print(f"Atlas : {guard.reason}\n")
+            continue
+
+        user_input = guard.text
+
         system_prompt, memory_hits = build_system_prompt(user_input)
         messages = [{"role": "system", "content": system_prompt}] + history
         messages.append({"role": "user", "content": user_input})
@@ -66,7 +72,12 @@ def main(
             print("\n")
         else:
             response_text = chat(
-                model, messages, timeout=timeout, stream=False, memory_hits=memory_hits
+                model,
+                messages,
+                timeout=timeout,
+                stream=False,
+                memory_hits=memory_hits,
+                guardrail_triggered=guard.triggered_rule or None,
             )
             print(f"{response_text}\n")
 

@@ -2,21 +2,24 @@
 
 Assistant IA 100% local pour ATLAS Consulting. Aucune donnée envoyée dans le cloud.
 
-## Lancer le projet
+## Table des matières
 
-Sur Linux :
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-ollama serve
-atlas-chat
-```
+- [Architecture](./docs/architecture.md)
+- [Installation](./docs/installation.md)
+- [Configuration](./docs/configuration.md)
+- [Gouvernance & RGPD](./docs/governance.md)
+- [Décisions d'architecture](./adr/001-choix-ollama.md)
 
-## Stack
-- LLM : Ollama (qwen3:8b)
-- Mémoire : ChromaDB
-- Monitoring : JSONL + pandas
+## Stack technique
+
+| Composant | Techno |
+|---|---|
+| LLM local | Ollama + qwen3:8b |
+| Mémoire longue | ChromaDB |
+| Config | YAML + Pydantic |
+| Guardrails | Regex |
+| Monitoring | JSONL local |
+| CLI | Typer |
 
 **Définir votre stratégie de mémorisation**. Questions à trancher en équipe :
 - Qu'est-ce qu'on stocke ? Chaque message ? Chaque paire Q/R ? Des résumés ?
@@ -32,4 +35,3 @@ Les plus importants et plus recents , donc peut etre le premier toujours et 2/3 
 - Comment on gère les doublons / informations contradictoires ?
 On genere un hash en fonction du contenu, donc si le contenu est le meme ça ecrase simplement
 si c'est contradictoire, on prend en compte le plus récent
-

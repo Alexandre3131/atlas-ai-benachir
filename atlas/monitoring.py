@@ -37,6 +37,7 @@ def traced(func):
             "user_message": user_message[:100],
             "assistant_message": str(result)[:200],
             "memory_hits": kwargs.get("memory_hits", 0),
+            "guardrail_triggered": kwargs.get("guardrail_triggered", None),
         }
 
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)

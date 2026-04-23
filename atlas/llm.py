@@ -2,6 +2,7 @@ from typing import Generator
 
 import httpx
 
+from atlas.config import config
 from atlas.monitoring import traced
 
 OLLAMA_BASE_URL = "http://localhost:11434"
@@ -21,6 +22,11 @@ def chat(
         "messages": messages,
         "stream": stream,
         "think": False,
+        "options": {
+            "temperature": config.model.temperature,
+            "top_p": config.model.top_p,
+            "num_ctx": config.model.num_ctx,
+        },
     }
 
     if stream:
