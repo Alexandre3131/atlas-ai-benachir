@@ -14,6 +14,6 @@ atlas-chat
 ```
 
 ## Stack
-- LLM : Ollama (qwen3:4b)
+- LLM : Ollama (qwen3:8b)
 - Mémoire : ChromaDB
 - Monitoring : JSONL + pandas
